@@ -6,6 +6,7 @@ def create_matrix():
     for row_str in rows:
         row = list(map(float, row_str.split()))  #change to number float
         matrix.append(row)
+        cat=10
     return matrix
 
 def matrix_multiply(A, B):
