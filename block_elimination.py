@@ -1,89 +1,97 @@
+import numpy as np
+
 def create_matrix():
-    #input matrix
-    matrix_str = input("input matrix(Separate rows with ; and please leave a space when entering each value): ")
-    rows = matrix_str.split(';')  #split row
+    # Input matrix from user
+    matrix_str = input("Input matrix (Separate rows with ; and space between values): ")
+    rows = matrix_str.split(';')
     matrix = []
     for row_str in rows:
-        row = list(map(float, row_str.split()))  #change to number float
+        row = list(map(float, row_str.split()))
         matrix.append(row)
-    return matrix
+    
+    # Check if all rows have the same length (valid matrix)
+    row_length = len(matrix[0])
+    if any(len(row) != row_length for row in matrix):
+        raise ValueError("Each row must have the same number of columns")
+    
+    return np.array(matrix)
 
 def matrix_multiply(A, B):
-    # Number of rows in A
-    rows_A = len(A)
-    # Number of columns in A (or rows in B)
-    cols_A = len(A[0])
-    # Number of columns in B
-    cols_B = len(B[0])
+    rows_A, cols_A = len(A), len(A[0])
+    rows_B, cols_B = len(B), len(B[0])
 
-    # Check if multiplication is possible
-    if cols_A != len(B):
+    if cols_A != rows_B:
         return "Matrices cannot be multiplied"
 
-    # Create a result matrix filled with zeros
     result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]
 
-    # Multiply matrices
     for i in range(rows_A):
         for j in range(cols_B):
-            for k in range(cols_A):
-                result[i][j] += A[i][k] * B[k][j]
+            result[i][j] = sum(A[i][k] * B[k][j] for k in range(cols_A))
 
     return result
 
 def matrix_inverse(A):
-    # Number of rows in A
-    rows_A = len(A)
-    # Number of columns in A
-    cols_A = len(A[0])
+    A = np.array(A)
+    try:
+        inv = np.linalg.inv(A)
+        return inv.tolist()
+    except np.linalg.LinAlgError:
+        return "Matrix is singular and cannot be inverted"
+def block_elimination(A):
+    # Assume A is a square matrix, partition it into 4 blocks
+    n = A.shape[0]
+    k = n // 2  # Half point for block separation
+    
+    # Separate the matrix A into 4 blocks
+    A11 = A[:k, :k]  # Top-left block
+    A12 = A[:k, k:]  # Top-right block
+    A21 = A[k:, :k]  # Bottom-left block
+    A22 = A[k:, k:]  # Bottom-right block
+    
+    # Inverse A11 (must be invertible)
+    A11_inv = np.linalg.inv(A11)
+    
+    # Calculate the Schur complement S = A22 - A21 * A11_inv * A12
+    Schur_complement = A22 - np.dot(np.dot(A21, A11_inv), A12)
+    
+    return A11, A12, A21, Schur_complement
 
-    # Check if A is a square matrix
-    if rows_A != cols_A:
-        return "Matrix is not square"
+# Create matrix from user input
+try:
+    matrix = create_matrix()
+    matrix2 = create_matrix()
+except ValueError as e:
+    print(f"Input error: {e}")
+    exit()
 
-    # Create an identity matrix of the same size as A
-    identity = [[float(i == j) for i in range(rows_A)] for j in range(cols_A)]
+# Multiply matrix1 by matrix2
+resultmultiply = matrix_multiply(matrix, matrix2)
 
-    # Perform Gaussian elimination on A and identity simultaneously
-    for i in range(rows_A):
-        # Find the row with the largest absolute value in column i
-        max_row = max(range(i, rows_A), key=lambda r: abs(A[r][i]))
-        # Swap the max row with the current row
-        A[i], A[max_row] = A[max_row], A[i]
-        identity[i], identity[max_row] = identity[max_row], identity[i]
-
-        # Divide the current row by the pivot element
-        pivot = A[i][i]
-        A[i] = [x / pivot for x in A[i]]
-        identity[i] = [x / pivot for x in identity[i]]
-
-        # Subtract multiples of the current row from the other rows
-        for j in range(rows_A):
-            if j != i:
-                factor = A[j][i]
-                A[j] = [A[j][k] - factor * A[i][k] for k in range(cols_A)]
-                identity[j] = [identity[j][k] - factor * identity[i][k] for k in range(cols_A)]
-
-    # Return the inverse matrix
-    return identity
-
-#create matrix
-matrix = create_matrix()
-#create matrix2 for check multiply
-matrix2 = create_matrix()
-#result matrix multiply matrix2
-resultmultiply = matrix_multiply(matrix,matrix2)
-#inverse of matrix
+# Inverse of matrix1
 inverse = matrix_inverse(matrix)
-#check matrix multiply
+
+# Display matrix multiplication result
 if type(resultmultiply) == str:
     print(resultmultiply)
 else:
+    print("Matrix Multiplication Result:")
     for row in resultmultiply:
         print(row)
-#check matrix inverse
+
+# Display matrix inverse result
 if type(inverse) == str:
     print(inverse)
 else:
+    print("Matrix Inverse Result:")
     for row in inverse:
         print(row)
+A11, A12, A21, Schur_complement = block_elimination(matrix)
+print("A11:")
+print(A11)
+print("A12:")
+print(A12)
+print("A21:")
+print(A21)
+print("Schur complement (S):")
+print(Schur_complement)
