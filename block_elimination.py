@@ -31,13 +31,52 @@ def create_matrix():
 
     return result"""
 
-def matrix_inverse(A):
+"""def matrix_inverse(A):
     A = np.array(A)
     try:
         inv = np.linalg.inv(A)
         return inv.tolist()
     except np.linalg.LinAlgError:
-        return "Matrix is singular and cannot be inverted"
+        return "Matrix is singular and cannot be inverted"""
+def matrix_inverse(A):
+    # Convert the input to a numpy array
+    A = np.array(A)
+
+    # Number of rows in A
+    rows_A = A.shape[0]
+    # Number of columns in A
+    cols_A = A.shape[1]
+
+    # Check if A is a square matrix
+    if rows_A != cols_A:
+        return "Matrix is not square"
+
+    # Create an identity matrix of the same size as A
+    identity = np.eye(rows_A)
+
+    # Perform Gaussian elimination on A and identity simultaneously
+    for i in range(rows_A):
+        # Find the row with the largest absolute value in column i
+        max_row = np.argmax(abs(A[i:, i])) + i
+        # Swap the max row with the current row
+        A[[i, max_row]] = A[[max_row, i]]
+        identity[[i, max_row]] = identity[[max_row, i]]
+
+        # Divide the current row by the pivot element
+        pivot = A[i, i]
+        A[i] = A[i] / pivot
+        identity[i] = identity[i] / pivot
+
+        # Subtract multiples of the current row from the other rows
+        for j in range(rows_A):
+            if j != i:
+                factor = A[j, i]
+                A[j] = A[j] - factor * A[i]
+                identity[j] = identity[j] - factor * identity[i]
+
+    # Return the inverse matrix
+    return identity
+
 def block_elimination(A):
     # Assume A is a square matrix, partition it into 4 blocks
     n = A.shape[0]
