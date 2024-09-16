@@ -16,7 +16,7 @@ def create_matrix():
     
     return np.array(matrix)
 
-def matrix_multiply(A, B):
+"""def matrix_multiply(A, B):
     rows_A, cols_A = len(A), len(A[0])
     rows_B, cols_B = len(B), len(B[0])
 
@@ -29,7 +29,7 @@ def matrix_multiply(A, B):
         for j in range(cols_B):
             result[i][j] = sum(A[i][k] * B[k][j] for k in range(cols_A))
 
-    return result
+    return result"""
 
 def matrix_inverse(A):
     A = np.array(A)
@@ -50,7 +50,7 @@ def block_elimination(A):
     A22 = A[k:, k:]  # Bottom-right block
     
     # Inverse A11 (must be invertible)
-    A11_inv = np.linalg.inv(A11)
+    A11_inv = matrix_inverse(A11)
     
     # Calculate the Schur complement S = A22 - A21 * A11_inv * A12
     Schur_complement = A22 - np.dot(np.dot(A21, A11_inv), A12)
@@ -60,24 +60,24 @@ def block_elimination(A):
 # Create matrix from user input
 try:
     matrix = create_matrix()
-    matrix2 = create_matrix()
+    #matrix2 = create_matrix()
 except ValueError as e:
     print(f"Input error: {e}")
     exit()
 
 # Multiply matrix1 by matrix2
-resultmultiply = matrix_multiply(matrix, matrix2)
+#resultmultiply = matrix_multiply(matrix, matrix2)
 
 # Inverse of matrix1
 inverse = matrix_inverse(matrix)
 
 # Display matrix multiplication result
-if type(resultmultiply) == str:
+"""if type(resultmultiply) == str:
     print(resultmultiply)
 else:
     print("Matrix Multiplication Result:")
     for row in resultmultiply:
-        print(row)
+        print(row)"""
 
 # Display matrix inverse result
 if type(inverse) == str:
