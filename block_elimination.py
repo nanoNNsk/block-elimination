@@ -16,28 +16,6 @@ def create_matrix():
     
     return np.array(matrix)
 
-"""def matrix_multiply(A, B):
-    rows_A, cols_A = len(A), len(A[0])
-    rows_B, cols_B = len(B), len(B[0])
-
-    if cols_A != rows_B:
-        return "Matrices cannot be multiplied"
-
-    result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]
-
-    for i in range(rows_A):
-        for j in range(cols_B):
-            result[i][j] = sum(A[i][k] * B[k][j] for k in range(cols_A))
-
-    return result"""
-
-"""def matrix_inverse(A):
-    A = np.array(A)
-    try:
-        inv = np.linalg.inv(A)
-        return inv.tolist()
-    except np.linalg.LinAlgError:
-        return "Matrix is singular and cannot be inverted"""
 def matrix_inverse(A):
     # Convert the input to a numpy array
     A = np.array(A)
@@ -164,26 +142,26 @@ def apply_block_elimination_until_ref(matrix):
     
     print("Matrix is now in row echelon form:")
     return matrix
-"""
-def block_elimination(A):
-    # Assume A is a square matrix, partition it into 4 blocks
-    n = A.shape[0]
-    k = n // 2  # Half point for block separation
-    
-    # Separate the matrix A into 4 blocks
-    A11 = A[:k, :k]  # Top-left block
-    A12 = A[:k, k:]  # Top-right block
-    A21 = A[k:, :k]  # Bottom-left block
-    A22 = A[k:, k:]  # Bottom-right block
-    
-    # Inverse A11 (must be invertible)
-    A11_inv = matrix_inverse(A11)
-    
-    # Calculate the Schur complement S = A22 - A21 * A11_inv * A12
-    Schur_complement = A22 - np.dot(np.dot(A21, A11_inv), A12)
-    
-    return A11, A12, A21, Schur_complement
+
+def back_substitution(A, b):
     """
+    Perform back substitution to solve the system Ax = b for x, assuming A is in row echelon form.
+    
+    A: 2D numpy array (matrix in row echelon form)
+    b: 1D numpy array (right-hand side of the system)
+    
+    Returns:
+    x: 1D numpy array, the solution to the system.
+    """
+    rows, cols = A.shape
+    x = np.zeros(cols)
+    
+    for i in reversed(range(rows)):
+        if A[i, i] == 0:
+            raise ValueError("Matrix is singular or does not have a unique solution.")
+        x[i] = (b[i] - np.dot(A[i, i+1:], x[i+1:])) / A[i, i]
+    
+    return x
 
 # Create matrix from user input
 try:
@@ -193,41 +171,18 @@ except ValueError as e:
     print(f"Input error: {e}")
     exit()
 
-# Multiply matrix1 by matrix2
-#resultmultiply = matrix_multiply(matrix, matrix2)
-
-# Inverse of matrix1
-inverse = matrix_inverse(matrix)
-
-# Display matrix multiplication result
-"""if type(resultmultiply) == str:
-    print(resultmultiply)
-else:
-    print("Matrix Multiplication Result:")
-    for row in resultmultiply:
-        print(row)"""
-
-# Display matrix inverse result
-if type(inverse) == str:
-    print(inverse)
-else:
-    print("Matrix Inverse Result:")
-    for row in inverse:
-        print(row)
 try:
-    result_matrix = apply_block_elimination_until_ref(matrix)
+    ref_matrix = apply_block_elimination_until_ref(matrix)
 except ValueError as e:
     print(f"Input error: {e}")
     exit()
-print(result_matrix)
-"""
-A11, A12, A21, Schur_complement = block_elimination(matrix)
-print("A11:")
-print(A11)
-print("A12:")
-print(A12)
-print("A21:")
-print(A21)
-print("Schur complement (S):")
-print(Schur_complement)
-"""
+# Extract last column as b and remove it from matrix A
+b = ref_matrix[:, -1]
+ref_matrix = ref_matrix[:, :-1]  # Remove the last column to get the coefficient matrix A
+# Solve the system using back substitution
+try:
+    solution = back_substitution(ref_matrix, b)
+    print("Solution to the system is:")
+    print(solution)
+except ValueError as e:
+    print(f"Error during back substitution: {e}")
