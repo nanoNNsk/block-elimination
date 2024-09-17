@@ -16,6 +16,20 @@ def create_matrix():
     
     return np.array(matrix)
 
+def generate_random_matrix(rows, cols):
+    """Generates a random matrix of the specified dimensions.
+
+    Args:
+        rows: The number of rows in the matrix.
+        cols: The number of columns in the matrix.
+
+    Returns:
+        A NumPy array representing the random matrix.   
+
+    """
+
+    return np.random.rand(rows, cols)
+
 def matrix_inverse(A):
     # Convert the input to a numpy array
     A = np.array(A)
@@ -146,26 +160,32 @@ def apply_block_elimination_until_ref(matrix):
 def back_substitution(A, b):
     """
     Perform back substitution to solve the system Ax = b for x, assuming A is in row echelon form.
-    
+    If A is not square, use the least squares solution.
+
     A: 2D numpy array (matrix in row echelon form)
     b: 1D numpy array (right-hand side of the system)
-    
+
     Returns:
     x: 1D numpy array, the solution to the system.
     """
     rows, cols = A.shape
-    x = np.zeros(cols)
-    
-    for i in reversed(range(rows)):
-        if A[i, i] == 0:
-            raise ValueError("Matrix is singular or does not have a unique solution.")
-        x[i] = (b[i] - np.dot(A[i, i+1:], x[i+1:])) / A[i, i]
-    
+
+    # If A is not square, use the least squares solution
+    if rows != cols:
+        x = np.linalg.lstsq(A, b, rcond=None)[0]
+    else:
+        x = np.zeros(cols)
+        for i in range(rows - 1, -1, -1):
+            if A[i, i] == 0:
+                raise ValueError("Matrix is singular or does not have a unique solution.")
+            x[i] = (b[i] - np.dot(A[i, i+1:], x[i+1:])) / A[i, i]
+
     return x
 
 # Create matrix from user input
 try:
-    matrix = create_matrix()
+    #matrix = create_matrix()
+    matrix = generate_random_matrix(15, 16)
     #matrix2 = create_matrix()
 except ValueError as e:
     print(f"Input error: {e}")
@@ -176,9 +196,22 @@ try:
 except ValueError as e:
     print(f"Input error: {e}")
     exit()
+
+#check row echelon form again
+if not is_row_echelon_form(ref_matrix):
+    print("Error: The matrix is not in row echelon form.")
+    exit()
 # Extract last column as b and remove it from matrix A
 b = ref_matrix[:, -1]
 ref_matrix = ref_matrix[:, :-1]  # Remove the last column to get the coefficient matrix A
+
+"""
+#check square matrix
+if ref_matrix.shape[0] != ref_matrix.shape[1]:
+    print("Error: The matrix is not square.")
+    exit()
+"""
+
 # Solve the system using back substitution
 try:
     solution = back_substitution(ref_matrix, b)
