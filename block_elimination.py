@@ -185,7 +185,7 @@ def back_substitution(A, b):
 # Create matrix from user input
 try:
     #matrix = create_matrix()
-    matrix = generate_random_matrix(15, 16)
+    matrix = generate_random_matrix(15, 15)
     #matrix2 = create_matrix()
 except ValueError as e:
     print(f"Input error: {e}")
@@ -204,13 +204,6 @@ if not is_row_echelon_form(ref_matrix):
 # Extract last column as b and remove it from matrix A
 b = ref_matrix[:, -1]
 ref_matrix = ref_matrix[:, :-1]  # Remove the last column to get the coefficient matrix A
-
-"""
-#check square matrix
-if ref_matrix.shape[0] != ref_matrix.shape[1]:
-    print("Error: The matrix is not square.")
-    exit()
-"""
 
 # Solve the system using back substitution
 try:
