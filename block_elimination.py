@@ -157,6 +157,7 @@ def apply_block_elimination_until_ref(matrix):
     print("Matrix is now in row echelon form:")
     return matrix
 
+
 def back_substitution(A, b):
     """
     Perform back substitution to solve the system Ax = b for x, assuming A is in row echelon form.
