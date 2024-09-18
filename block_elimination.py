@@ -11,6 +11,10 @@ def create_matrix():
         except ValueError:
             raise ValueError("Input contains non-numeric values. Please enter only numeric values.")
         matrix.append(row)
+    if matrix[0][0] == 0:
+        matrix[1],matrix[0] = matrix[0],matrix[1]
+        print("swap row 1 and 2 because first number of row one is 0")
+        
     
     # Check if all rows have the same length (valid matrix)
     row_length = len(matrix[0])
@@ -314,6 +318,9 @@ try:
 except ValueError as e:
     print(f"Input error: {e}")
     exit()
+
+print("before block elimination")
+print(matrix)
 
 try:
     ref_matrix = apply_block_elimination_until_ref(matrix)
