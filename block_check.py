@@ -75,26 +75,17 @@ def apply_block_elimination_until_ref(matrix):
     The matrix in row echelon form after performing block elimination.
     """
     block_size = 1
-    step = 1
-    
     while is_row_echelon_form(matrix) == 'f':
-        print(f"Step {step}: Matrix is not in row echelon form. Applying block elimination with block size {block_size}...")
         matrix = block_elimination(matrix, block_size)
-        print("Matrix after block elimination:")
-        print(matrix)
         block_size += 1
-        step += 1
     
-    print("Matrix is now in row echelon form:")
     return matrix
 
 # Example matrix from the problem
-matrix = np.array([[1, 1, 1, 1, 1, 1],
-                   [-1, -1, 0, 0, 1, -1],
-                   [-2, -2, 0, 0, 3, 1],
-                   [0, 0, 1, 1, 3, 3],
-                   [1, 1, 2, 2, 4, 4]])
+matrix = np.array([[0, 2, 4],
+                   [3, -2, 5]])
 
 # Apply block elimination until the matrix is in row echelon form
 result_matrix = apply_block_elimination_until_ref(matrix)
 print(result_matrix)
+
