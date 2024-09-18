@@ -95,15 +95,7 @@ def block_elimination(matrix, block_size):
     try:
         A_inv = matrix_inverse(A)
     except np.linalg.LinAlgError:
-        print("Matrix A is singular, proceeding with partial elimination.")
-
-        # We can still return the matrix after partial elimination without inverting A
-        # A_inv will remain empty, and we will not compute Schur complement in this case
-        result_matrix = np.block([
-            [A, B],
-            [np.zeros_like(C), D]
-        ])
-        return result_matrix
+        raise ValueError("Matrix A is singular, cannot proceed with block elimination.")
 
     # Step 2: Compute the Schur complement for block D: D - C * A_inv * B
     Schur_complement = D - C @ A_inv @ B
@@ -128,6 +120,7 @@ def is_row_echelon_form(A):
     Returns:
     't' if the matrix is in REF, otherwise 'f'.
     """
+
     rows, cols = A.shape
     last_pivot_index = -1  # ตำแหน่ง pivot ของแถวก่อนหน้า
     
