@@ -6,8 +6,15 @@ def create_matrix():
     rows = matrix_str.split(';')
     matrix = []
     for row_str in rows:
-        row = list(map(float, row_str.split()))
+        try:
+            row = list(map(float, row_str.split()))  # Ensure all values are converted to floats
+        except ValueError:
+            raise ValueError("Input contains non-numeric values. Please enter only numeric values.")
         matrix.append(row)
+    if matrix[0][0] == 0:
+        matrix[1],matrix[0] = matrix[0],matrix[1]
+        print("swap row 1 and 2 because first number of row one is 0")
+        
     
     # Check if all rows have the same length (valid matrix)
     row_length = len(matrix[0])
@@ -29,6 +36,8 @@ def generate_random_matrix(rows, cols):
     """
 
     return np.random.rand(rows, cols)
+
+np.seterr(divide='ignore', invalid='ignore') #for ignore RuntimeWarning
 
 def matrix_inverse(A):
     # Convert the input to a numpy array
@@ -72,21 +81,27 @@ def matrix_inverse(A):
 def block_elimination(matrix, block_size):
     """
     Perform block elimination on a matrix of a given block size.
-    
+
     matrix: 2D numpy array (matrix)
     block_size: int, the size of the top-left block A (block_size x block_size)
-    
+
     Returns:
     A new matrix after block elimination.
     """
-    # Extract blocks A, B, C, and D from the input matrix
-    A = matrix[:block_size, :block_size]               # A is the top-left block
-    B = matrix[:block_size, block_size:]               # B is the row vector to the right of A
-    C = matrix[block_size:, :block_size]               # C is the column vector below A
-    D = matrix[block_size:, block_size:]               # D is the bottom-right block
+    # Ensure matrix is of type float64
+    matrix = np.array(matrix, dtype=np.float64)
 
-    # Step 1: Compute the inverse of A
-    A_inv = matrix_inverse(A)
+    # Extract blocks A, B, C, and D from the input matrix
+    A = matrix[:block_size, :block_size].astype(np.float64)  # A is the top-left block
+    B = matrix[:block_size, block_size:].astype(np.float64)  # B is the row vector to the right of A
+    C = matrix[block_size:, :block_size].astype(np.float64)  # C is the column vector below A
+    D = matrix[block_size:, block_size:].astype(np.float64)  # D is the bottom-right block
+
+    # Step 1: Check if A is invertible (non-zero pivot), skip the block if singular
+    try:
+        A_inv = matrix_inverse(A)
+    except np.linalg.LinAlgError:
+        raise ValueError("Matrix A is singular, cannot proceed with block elimination.")
 
     # Step 2: Compute the Schur complement for block D: D - C * A_inv * B
     Schur_complement = D - C @ A_inv @ B
@@ -111,6 +126,7 @@ def is_row_echelon_form(A):
     Returns:
     't' if the matrix is in REF, otherwise 'f'.
     """
+
     rows, cols = A.shape
     last_pivot_index = -1  # ตำแหน่ง pivot ของแถวก่อนหน้า
     
@@ -136,22 +152,90 @@ def is_row_echelon_form(A):
 
 def apply_block_elimination_until_ref(matrix):
     """
-    Apply block elimination repeatedly, increasing block size, until the matrix is in row echelon form.
+    Apply block elimination repeatedly, increasing block size, until the matrix is in row echelon form
+    or no further elimination is possible.
     
     matrix: 2D numpy array (matrix)
     
     Returns:
-    The matrix in row echelon form after performing block elimination.
+    The matrix in row echelon form after performing block elimination or after handling a singular block.
     """
     block_size = 1
     step = 1
+    max_block_size = min(matrix.shape)  # Maximum block size is limited by the matrix dimensions
+    prev_matrix = None  # To track changes between iterations
     
     while is_row_echelon_form(matrix) == 'f':
+        #print(f"Step {step}: Matrix is not in row echelon form. Applying block elimination with block size {block_size}...")
+        
+        # Store the current matrix for comparison after elimination
+        prev_matrix = matrix.copy()
+        
+        # Apply block elimination
         matrix = block_elimination(matrix, block_size)
+        
+        #print("Matrix after block elimination:")
+        #print(matrix)
+        
+        # Check if the matrix has changed since the last step (to avoid infinite loops)
+        if np.allclose(matrix, prev_matrix):
+            print("Matrix stopped changing. Terminating the process.")
+            break
+        
+        # Increase the block size
         block_size += 1
+        step += 1
+        
+        # Ensure we don't exceed the matrix dimensions
+        if block_size > max_block_size:
+            #print("Block size exceeds matrix dimensions. Terminating the process.")
+            break
     
+    #print("Matrix is now in row echelon form or block elimination cannot proceed further.")
     return matrix
 
+
+def back_substitution(A, b, x):
+    """
+    Perform back substitution to solve the system of equations.
+    
+    Parameters:
+    A : 2D numpy array (row echelon matrix)
+    b : 1D numpy array (result vector)
+    x : 1D numpy array (solution vector with free variables set to 1)
+    
+    Returns:
+    A numpy array of the solution.
+    """
+    rows, cols = A.shape
+    
+    # Back substitution for pivot variables
+    for i in range(rows - 1, -1, -1):
+        row = A[i]
+        b_val = b[i]
+        for j in range(cols):
+            if row[j] != 0:
+                x[j] = (b_val - np.dot(row[j+1:], x[j+1:])) / row[j]
+                break
+    
+    return x
+
+def is_inconsistent(A, b):
+    """
+    Check if the system is inconsistent (no solution).
+    
+    Parameters:
+    A : 2D numpy array (row echelon matrix)
+    b : 1D numpy array (result vector)
+    
+    Returns:
+    True if the system is inconsistent, False otherwise.
+    """
+    rows, cols = A.shape
+    for i in range(rows):
+        if np.all(A[i, :] == 0) and b[i] != 0:
+            return True
+    return False
 
 def find_free_and_dependent_variables(A):
     """
@@ -183,48 +267,6 @@ def find_free_and_dependent_variables(A):
     dependent_vars = [j for j in range(cols) if j not in free_vars]
     
     return free_vars, dependent_vars
-
-def is_inconsistent(A, b):
-    """
-    Check if the system is inconsistent (no solution).
-    
-    Parameters:
-    A : 2D numpy array (row echelon matrix)
-    b : 1D numpy array (result vector)
-    
-    Returns:
-    True if the system is inconsistent, False otherwise.
-    """
-    rows, cols = A.shape
-    for i in range(rows):
-        if np.all(A[i, :] == 0) and b[i] != 0:
-            return True
-    return False
-
-def back_substitution(A, b, x):
-    """
-    Perform back substitution to solve the system of equations.
-    
-    Parameters:
-    A : 2D numpy array (row echelon matrix)
-    b : 1D numpy array (result vector)
-    x : 1D numpy array (solution vector with free variables set to 1)
-    
-    Returns:
-    A numpy array of the solution.
-    """
-    rows, cols = A.shape
-    
-    # Back substitution for pivot variables
-    for i in range(rows - 1, -1, -1):
-        row = A[i]
-        b_val = b[i]
-        for j in range(cols):
-            if row[j] != 0:
-                x[j] = (b_val - np.dot(row[j+1:], x[j+1:])) / row[j]
-                break
-    
-    return x
 
 def solve_row_echelon(A, b):
     """
@@ -266,8 +308,9 @@ def solve_row_echelon(A, b):
         print("ไม่มีตัวแปรอิสระ")
     
     # แสดงผลคำตอบของสมการ
-    print(f"(consisitent)คำตอบของสมการคือ: {x}")
+    print(f"คำตอบของสมการคือ: {x}")
     return x, free_vars, dependent_vars
+
 
 # Create matrix from user input
 try:
@@ -277,6 +320,9 @@ try:
 except ValueError as e:
     print(f"Input error: {e}")
     exit()
+
+#print("before block elimination")
+#print(matrix)
 
 try:
     ref_matrix = apply_block_elimination_until_ref(matrix)
