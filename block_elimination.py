@@ -1,20 +1,30 @@
 import numpy as np
+from fractions import Fraction
 
 def create_matrix():
     # Input matrix from user
     matrix_str = input("Input matrix (Separate rows with ; and space between values): ")
     rows = matrix_str.split(';')
     matrix = []
+    
     for row_str in rows:
         try:
-            row = list(map(float, row_str.split()))  # Ensure all values are converted to floats
+            row = []
+            for val in row_str.split():
+                # Check if the value is a fraction (contains a '/')
+                if '/' in val:
+                    row.append(float(Fraction(val)))  # Convert fraction to float
+                else:
+                    row.append(float(val))  # Convert normal number to float
         except ValueError:
-            raise ValueError("Input contains non-numeric values. Please enter only numeric values.")
-        matrix.append(row)
-    if matrix[0][0] == 0:
-        matrix[1],matrix[0] = matrix[0],matrix[1]
-        print("swap row 1 and 2 because first number of row one is 0")
+            raise ValueError("Input contains non-numeric values. Please enter only numeric values or fractions.")
         
+        matrix.append(row)
+    
+    # Swap row 1 and 2 if the first element of the first row is 0
+    if matrix[0][0] == 0:
+        matrix[1], matrix[0] = matrix[0], matrix[1]
+        print("swap row 1 and 2 because first number of row one is 0")
     
     # Check if all rows have the same length (valid matrix)
     row_length = len(matrix[0])
@@ -92,6 +102,7 @@ def block_elimination(matrix, block_size):
     matrix = np.array(matrix, dtype=np.float64)
 
     # Extract blocks A, B, C, and D from the input matrix
+    
     A = matrix[:block_size, :block_size].astype(np.float64)  # A is the top-left block
     B = matrix[:block_size, block_size:].astype(np.float64)  # B is the row vector to the right of A
     C = matrix[block_size:, :block_size].astype(np.float64)  # C is the column vector below A
@@ -166,7 +177,7 @@ def apply_block_elimination_until_ref(matrix):
     prev_matrix = None  # To track changes between iterations
     
     while is_row_echelon_form(matrix) == 'f':
-        #print(f"Step {step}: Matrix is not in row echelon form. Applying block elimination with block size {block_size}...")
+        print(f"Step {step}: Matrix is not in row echelon form. Applying block elimination with block size {block_size}...")
         
         # Store the current matrix for comparison after elimination
         prev_matrix = matrix.copy()
@@ -174,8 +185,8 @@ def apply_block_elimination_until_ref(matrix):
         # Apply block elimination
         matrix = block_elimination(matrix, block_size)
         
-        #print("Matrix after block elimination:")
-        #print(matrix)
+        print("Matrix after block elimination:")
+        print(matrix)
         
         # Check if the matrix has changed since the last step (to avoid infinite loops)
         if np.allclose(matrix, prev_matrix):
