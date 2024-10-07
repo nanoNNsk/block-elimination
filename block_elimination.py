@@ -1,20 +1,30 @@
 import numpy as np
+from fractions import Fraction
 
 def create_matrix():
     # Input matrix from user
     matrix_str = input("Input matrix (Separate rows with ; and space between values): ")
     rows = matrix_str.split(';')
     matrix = []
+    
     for row_str in rows:
         try:
-            row = list(map(float, row_str.split()))  # Ensure all values are converted to floats
+            row = []
+            for val in row_str.split():
+                # Check if the value is a fraction (contains a '/')
+                if '/' in val:
+                    row.append(float(Fraction(val)))  # Convert fraction to float
+                else:
+                    row.append(float(val))  # Convert normal number to float
         except ValueError:
-            raise ValueError("Input contains non-numeric values. Please enter only numeric values.")
-        matrix.append(row)
-    if matrix[0][0] == 0:
-        matrix[1],matrix[0] = matrix[0],matrix[1]
-        print("swap row 1 and 2 because first number of row one is 0")
+            raise ValueError("Input contains non-numeric values. Please enter only numeric values or fractions.")
         
+        matrix.append(row)
+    
+    # Swap row 1 and 2 if the first element of the first row is 0
+    if matrix[0][0] == 0:
+        matrix[1], matrix[0] = matrix[0], matrix[1]
+        print("swap row 1 and 2 because first number of row one is 0")
     
     # Check if all rows have the same length (valid matrix)
     row_length = len(matrix[0])
