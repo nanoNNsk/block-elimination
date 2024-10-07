@@ -174,7 +174,7 @@ def apply_block_elimination_until_ref(matrix):
     prev_matrix = None  # To track changes between iterations
     
     while is_row_echelon_form(matrix) == 'f':
-        print(f"Step {step}: Matrix is not in row echelon form. Applying block elimination with block size {block_size}...")
+        #print(f"Step {step}: Matrix is not in row echelon form. Applying block elimination with block size {block_size}...")
         
         # Store the current matrix for comparison after elimination
         prev_matrix = matrix.copy()
@@ -182,8 +182,8 @@ def apply_block_elimination_until_ref(matrix):
         # Apply block elimination
         matrix = block_elimination(matrix, block_size)
         
-        print("Matrix after block elimination:")
-        print(matrix)
+        #print("Matrix after block elimination:")
+        #print(matrix)
         
         # Check if the matrix has changed since the last step (to avoid infinite loops)
         if np.allclose(matrix, prev_matrix):
@@ -199,7 +199,7 @@ def apply_block_elimination_until_ref(matrix):
             print("Block size exceeds matrix dimensions. Terminating the process.")
             break
     
-    print("Matrix is now in row echelon form or block elimination cannot proceed further.")
+    #print("Matrix is now in row echelon form or block elimination cannot proceed further.")
     return matrix
 
 
@@ -329,8 +329,8 @@ except ValueError as e:
     print(f"Input error: {e}")
     exit()
 
-print("before block elimination")
-print(matrix)
+#print("before block elimination")
+#print(matrix)
 
 try:
     ref_matrix = apply_block_elimination_until_ref(matrix)
